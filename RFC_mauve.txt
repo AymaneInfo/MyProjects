@@ -1,0 +1,769 @@
+﻿
+
+
+
+
+
+DNC1                                                           A. Nikeza                          
+Network Working Group                                        M. Boubaker
+Category: StandardS Track                                       A. Saidi
+                                                                W. Trinh
+                                                              A.Laaouine
+                                                           February 2022
+                                  
+ 
+
+                  Dog is Not a Chat Protocol - Version 1
+
+
+  
+Status of this Memo
+
+
+   This RFC contains the use of the DNC protocol for the Internet 
+   community and the different exchanges between 
+   the client and the server.
+   Distribution of this memo is unlimited.
+
+
+Table of Contents
+
+   1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   2
+   2.  Basic Operation   . . . . . . . . . . . . . . . . . . . . . .   2
+   3.  Commands  . . . . . . . . . . . . . . . . . . . . . . . . . .   3
+       CONNECT Command  . . . . . . . . . . . . . . . . . . . . . .    3
+       QUIT Command  . . . . . . . . . . . . . . . . . . . . . . . .   3
+       CHAT Command  . . . . . . . . . . . . . . . . . . . . . . . .   3
+       ABS  Command  . . . . . . . . . . . . . . . . . . . . . . . .   4
+       BACK Command  . . . . . . . . . . . . . . . . . . . . . . . .   4
+       LIST Command  . . . . . . . . . . . . . . . . . . . . . . . .   5
+       EDIT Command  . . . . . . . . . . . . . . . . . . . . . . . .   5
+       ACCEPT Command  . . . . . . . . . . . . . . . . . . . . . . .   6
+       ACCEPTFILE Command  . . . . . . . . . . . . . . . . . . . . .   6
+       REFUSE Command  . . . . . . . . . . . . . . . . . . . . . . .   6
+       SEND Command  . . . . . . . . . . . . . . . . . . . . . . . .   7
+       REFUSEFILE Command  . . . . . . . . . . . . . . . . . . . . . . 7
+       TELL Command  . . . . . . . . . . . . . . . . . . . . . . . .   8
+       STOP Command  . . . . . . . . . . . . . . . . . . . . . . . .   8
+       SFIC Command  . . . . . . . . . . . . . . . . . . . . . . . .   9
+       HELP Command  . . . . . . . . . . . . . . . . . . . . . . . .  10
+   4.  Response code   . . . . . . . . . . . . . . . . . . . . . . .  11
+   5.  Author's Addresses  . . . . . . . . . . . . . . . . . . . . .  13
+
+  
+
+
+
+
+Nikeza & Boubaker & Saidi & Trinh & Laaouine                    [Page 1] 
+
+                                    DNC                    February 2022
+
+
+
+1. Introduction
+
+   DNC is a server on which connected clients will be able to 
+   communicate between them through a TCP connection.
+
+   It is very useful to make a secure conversation between clients
+   and ensure an established connection based on TCP protocol.
+
+   TCP is a standard that defines how to establish and maintain a 
+   network conversation by which applications can exchange data.
+
+
+
+2. Basic operation
+
+   Each connected client must have a unique nickname. if the nickname 
+   already exists ,  the server will ask to choose another available 
+   nickname. Once the nickname is accepted the server will notify all
+   the connected clients that this client is now part of connected 
+   clients. 
+
+   Once the client is disconnected , the server will notify all the 
+   connected clients that this client is now disconnected with the exact 
+   time of disconnection.
+
+   The connected clients can send messages to the server which is going
+   to broadcast them to all the connected clients while showing the 
+   nickname and the content of the message of the client who wrote the 
+   message.
+
+   A connected client can send a private message to another client as
+   well as sending public messages.But  , In order to send a private 
+   message the client needs to use the command TELL, and the command 
+   CHAT for public messages.
+
+   Before the connected client starts a private chat they need to use 
+   the command SEND to be able to start the private chat
+   and the other client can accept the request by responding using the
+   same command SEND.
+
+   The connected clients can send commands which are not case sensitive,
+   they can also share files between them.
+
+
+Nikeza & Boubaker & Saidi & Trinh & Laaouine                    [Page 2]
+
+                                    DNC                    February 2022
+
+
+
+   Once the receiver accepts the file, they both need to agree on which
+   port and the protocol(UDP/TCP) to use.
+
+   The server replies should be followed by response code in order to
+   show the clients that their command is accepted or not.
+
+3. Commands
+  
+   Each command must be of the form : COMMAND [args1] [args2]...
+
+      CONNECT address... port...
+
+	 Objective: Login the user.
+
+	 Arguments: The address and the port to use.
+
+	 Restrictions: The User mustn't be on a server.
+
+	 Responses :
+		
+		206 (To the user who used the command): You
+		are connected to the server adr. (adr must be replaced
+		by the address the user wants to connect to.)
+		(To every connected user) : nick joined the server.
+		(nickmust be replaced by the nickname of the user who 
+		connected.)
+
+	 Examples:
+
+		C: CONNECT 127.0.0.1 8080
+		S : 206 : You are connected to the server 127.0.0.1.
+		S : user1 joined the server.
+
+      QUIT
+         
+
+         Objective: Logout the user, the client may connect again.
+	 The message stating that the user disconnected must be sent
+	 to every connected user on the server.	
+
+         Arguments: None
+
+         Restrictions: The User must be connected.
+
+         Responses:
+
+                 207 (To the user who used the command): You have been
+                 disconnected.
+		 (To every connected user) : nick disconnected. (nick
+                 must be replaced by the nickname of the user who
+                 disconnected.)         
+
+         Examples:
+
+                 C: QUIT
+		 S : 207 : You have been disconnected.
+                 S : user1 disconnected.
+
+
+      CHAT message...
+
+
+         Objective: The User can send a message that will be seen by 
+         every connected user on the server.
+
+         Arguments : The message to be sent.
+
+         Restrictions: The user must be online.
+
+         Possible Response:
+                 200 (To every connected users) : nick : message (nick
+                 must be replaced by the nickname of the user who sent
+                 the message, message must be replaced by the message
+                 of the user)
+		 403
+
+	 Examples:
+		 C: CHAT Blabla
+		 S: 200 : User1 : Blabla
+
+Nikeza & Boubaker & Saidi & Trinh & Laaouine                    [Page 3]
+
+                                    DNC                    February 2022
+
+		
+      ABS
+
+
+         Objective: Change the state of the User from “online” to 
+         “away”, the user can receive messages but cannot send any.
+	 A message stating that the user is away must be sent to 
+	 every users on the server.
+
+         Arguments: None
+
+         Restrictions: The user must be online.
+        
+         Possible Response:
+
+                 200 (To every connected users) : nick is now away. 
+                 (nick must be replaced by the nickname of the user who
+                 used the command)
+                 400
+                 417 (To the user who used the command) : nick is
+                 already away. (nick must be replaced by the nickname
+                 of the user who used the command)
+
+
+         Examples:
+
+                 C: ABS
+                 S: 200 : user1 is now away.
+                 C: ABS
+		 S: 417 : user1 is already away.
+		 C: CHAT Blabla
+		 S: 403 : user1 can't send messages (Away)
+
+
+      BACK
+
+
+         Objective: Change the state of the User from “away” to 
+	 “online", the user can receive and send messages. 
+	 A message stating that the user is back must be sent to
+	 every users on the server.
+
+         Arguments: None
+
+         Restrictions: The user must be away.
+
+         Possible Response:
+
+                 200 (To every connected users) : nick is back. (nick
+                 must be replaced by the nickname of the user who used
+                 the command)
+                 400
+                 417 (To the user who used the command) : nick is
+                 already online. (nick must be replaced by the nickname
+                 of the user who used the command)
+
+
+Nikeza & Boubaker & Saidi & Trinh & Laaouine                    [Page 4]
+
+                                    DNC                    February 2022
+
+
+         Examples:
+
+                 C: BACK
+                 S: 200 : user1 is back.
+		 C: BACK
+		 C: 417 : user1 is already online.
+         
+
+      LIST
+
+
+         Objective: The purpose of the command is to display every user 
+         connected to the server. The list must show the nickname of 
+	 every users separated by a comma and it must be sorted in 
+	 alphabetical order. The list must be shown only to the user
+	 who used the command.
+
+         Arguments: none
+
+         Restriction: the user must be connected.
+        
+         Possible Responses:
+
+		 204 (To the user who used the command) : (Every
+                 nickname must be separated by a comma and the list must
+                 be sorted in alphabetical order)
+		 400
+
+
+         Examples:
+
+ 		 C: LIST
+		 S: 204 : user1, user2, user3…
+	
+			
+      EDIT nickname...
+
+
+         Objective: Change the nickname of the user if it isn’t already 
+         taken. A message stating that the user change its nickname and
+	 showing the new nickname must be sent to every users on the 
+	 server.
+
+
+Nikeza & Boubaker & Saidi & Trinh & Laaouine                    [Page 5]
+
+                                    DNC                    February 2022
+
+
+
+         Arguments: the new nickname.
+
+         Restriction : the nickname must not be already taken.
+
+         Possible Responses:
+
+		 208 (To every connected users) : oldNick is now
+                 newNick (oldNick must be replaced by the old
+                 nickname of the user, newNick must be replaced
+                 by the new nickname of the user.)
+		 409 (To the user who used the command) : nick
+                 is already taken (nick must be replaced by the
+                 nickname that the user wanted.)
+
+
+         Examples:
+
+		 C: EDIT Nick
+ 		 S: 208 : User1 is now Nick
+		 C: EDIT User2
+		 S: 409 : User2 is already taken.
+
+      ACCEPT nickname... 
+	  
+		
+         Objective: The user can accept a request for a private chat 
+	 from another user.
+		
+         Arguments: The nickname of the user who sent the request.
+		
+         Restriction: The other user must have sent a request with SEND.
+		
+         Possible Responses:
+		
+		 200 (to the user who used the command) : You accepted the 
+		 private chat of nick
+		 (nick must be replaced by the nickname of the other user)
+		 400 (to the user who used the command) : You don't have
+		 any request to accept.
+		 408 (to the user who used the command): The user doesn't exist.
+		 419 (to the user who used the command) : you can't 
+		 use this command to yourself
+
+      ACCEPTFILE nickname... file... port... address...
+	
+	Objective: The user can accept a request to download a file 
+	from another user.
+
+	Arguments: The nickname of the user who sent the request, the
+	name of the file that is sent, the port and address used for
+	the download.
+
+	Restrictions: The other user must have sent a request with SFIC.
+
+	Possible Responses:
+
+		  210 (to the user who used the command) : You accepted to download 
+		  the file with the address : addr and port : prt. (addr and prt 
+		  must be replaced by the address and port used for the download.)
+		  400 (to the user who used the command) : You don't have
+		  any request to accept.
+		  408 (to the user who used the command): The user doesn't exist.
+		  419 (to the user who used the command) : you can't 
+		  use this command to yourself
+
+
+      REFUSE nickname..
+	
+	
+	Objective : The user uses this command to refuse a request 
+        made by another user for a private chat.
+
+	Arguments : the nickname of the other user.
+	
+	Restriction: The other user must have sent a request with SEND.
+	
+	Possible Responses: 
+		200 (to the user who used the command): you
+		refused the request of user1.
+		400 (to the user who used the command): you
+		don't have any request to refuse.
+		419 (to the user who used the command) : you 
+		can't use this command to yourself
+
+Nikeza & Boubaker & Saidi & Trinh & Laaouine                    [Page 6]
+
+                                    DNC                    February 2022
+
+      REFUSEFILE nickname...
+	
+	Objective: The user uses this command to refuse a request 
+	made by another user to download a file.
+
+	Arguments : the nickname of the other user.
+	
+	Restriction: The other user must have sent a request with SFIC.
+
+	Possible Responses:
+		200 (to the user who used the command): you
+		refuse to receive a file from user1.
+		400 (to the user who used the command): you
+		don't have any request to refuse.
+		419 (to the user who used the command) : you 
+		can't use this command to yourself
+
+      SEND nickname...
+
+
+         Objective : The user can start a private chat with another
+         user, the other user must accept the private chat for it to
+         be created. Only the affected user must see the message that 
+	 someone wants to create a private chat with them.
+
+         Arguments : the nickname of the other user.
+
+         Restriction: the two users must be online.
+
+         Possible Responses:
+
+		 100 (To the other user) : nick wants to have a private
+                 chat with you. (nick must be replaced by the nickname
+                 of the user who used the command.)
+		 201 (To the other user) : You accepted the private
+                 from nick. (nick must be replaced by the nickname of
+                 the user who used the command.)
+		 (To the user who used the command) : nick2 
+                 accepted the private chat with you. (nick2 must be 
+                 replaced by the nickname of the other user.)
+		 408 (To the user who used the command) : nick doesn't
+                 exist. (nick must be replaced by the nickname of the
+                 other user.)
+		 417 (To the user who used the command) : The other
+                 user refused to have a private chat with you.
+		 419 (to the user who used the command) : you can't 
+		 use this command to yourself
+
+         Examples:
+
+		 C (User1) : SEND User2
+		 S (To User2) : 100 : User1 wants to have a private
+                 chat with you.
+		 C (User2) : ACCEPT User1
+		 S (To User2) : 201 : You accepted the private chat
+                 from User1.
+		 S (To User1) : 201 : User2 accepted the private
+                 chat with you.
+		 C (User1) : SEND Unknown
+		 S (To User1) : 408 : Unknown doesn't exist.
+
+		 C (User1:):SEND User3
+		 S (To User3) : 100 : User1 wants to have a private
+                 chat with you.
+		 C (User3) : REFUSE User1
+		 S : (To User3) : 200 : You refused to have a 
+                 private chat with user1
+		 S (To User1) : 417 : User3 refused to have a
+                 private chat with you.
+
+
+Nikeza & Boubaker & Saidi & Trinh & Laaouine                    [Page 7]
+
+                                    DNC                    February 2022
+
+
+      TELL nickname... message...
+
+
+         Objective: The user can send private messages to the other
+         user. The private messages must not be seen by users not
+	 involved in the private chat.
+
+         Arguments: The nickname of the other user and
+	 the message to be sent.
+
+         Restrictions: A private chat must be created between the two
+         users.
+		 
+         Possible Responses:
+		 
+		 205 (To the user who used the command and the
+                 other user) : nick : message (nick must be replaced
+                 by the nickname of the user who sent the message,
+                 message must be replaced by the message of the user)
+  		 410 (To the user who used the command) : There is
+                 no private chat between you and nick. (nick must be
+                 replaced by the nickname of the other user.)
+		 417 (To the user who used the command) : The other user
+                 refused to have a private chat with you.
+		 419 (to the user who used the command) : you can't 
+		 use this command to yourself
+         Examples: 
+		 
+		 C (User1) : SEND User2
+		 S (To User2) : 100 : User1 wants to have a private
+                 chat with you.
+		 C (User2) : ACCEPT User1
+		 S (To User2) : 205 : You accepted the private chat
+                 from User1.
+		 S (To User1) : 205 : User2 accepted the private
+                 chat with you.
+		 C (User1) : TELL User2 "Coucou"
+		 S (To User2) : 200 : User1 : Coucou
+
+		 C (User1) : SEND User3
+		 S (To User3) : 100 : User1 wants to have a private
+                 chat with you.
+		 C (User2) : REFUSE User1
+		 S (To User3) : 200 : You refused the private chat
+                 from User1.
+		 S (To User1) : 200 : User3 refused the private
+                 chat with you.
+		 C (User1) : TELL User3 "Coucou"
+		 S: 410 : There is no private chat between you and 
+		 User3.
+
+
+      STOP nickname...
+
+
+         Objective: Stop the private chat between two users. The 
+         messages between these two users will no longer be broadcast 
+         to eachother only. The message stating that the private chat
+	 no longer exist must be seen only by the two users involved.
+       
+         Arguments: The nickname of the user you want to stop the 
+         private chat with.
+
+
+Nikeza & Boubaker & Saidi & Trinh & Laaouine                    [Page 8]
+
+                                    DNC                    February 2022 
+
+ 
+
+         Restriction: A private chat between the two users must exist.
+
+         Possible Responses:
+
+  		 209 (To the user who used the command) : You stopped
+                 the private chat with nick (nick must be replaced by
+                 the nickname of the other user.)
+		 (To the other user) : nick stopped the private
+                 chat with you (nick must be replaced by the nickname
+                 of the user who used the command.)
+		 400
+		 410 (to the user who used the command) : There is
+                 no private chat between you and nick. (nick must be
+                 replaced by the nickname of the other user.)
+		 419 (to the user who used the command) : you can't 
+		 use this command to yourself
+
+         Examples:
+
+		 C (User1): STOP User2
+		 S (To User1) : 209 : You stopped the private chat
+                 with User2.
+		 S (To User2) : 209 : User1 stopped the private
+                 chat with you.
+		 C (User1): STOP User2
+		 S: 410 : There is no private chat between you and 
+ 		 User2.
+
+      SFIC nickname... file...
+
+
+         Objective: The user can send a file to another user. The 
+         receiver must accept the download to receive the file. Only
+	 the affected user must see that someone wants to send them a 
+	 file.
+
+         Arguments: Nickname of another user and the file to send.
+
+         Restriction: The user must exist.
+
+
+Nikeza & Boubaker & Saidi & Trinh & Laaouine                    [Page 9]
+
+                                    DNC                    February 2022
+
+
+         Possible Responses:
+
+		 101 (to the other user) : nick1 wants to send you 
+                 file. (nick must be replaced by the user who used
+                 the command)
+		 417 (To the user who used the command) : The other user
+                 refused to receive a file.
+		 419 (to the user who used the command) : you can't 
+		 use this command to yourself
+
+	Examples : 
+
+		 C (User1) : SFIC User2 file.txt
+		 S : 101 : User1 wants to send you a file.
+		 C (User2) : ACCEPTFILE User1 80 127.0.0.0
+		 S : 210 : You accepted to download the file with the
+                 address : 127.0.0.0 and port : 80 .
+
+		 C (User1) : SFIC User3 file.txt
+		 S : 101 : User3 wants to send you a file.
+		 C : (User3) : REFUSEFILE User1.
+		 S : (To User3) : 200 : You refused to receive
+		 a file from user1
+		 S :(To User1) : 417 : The other user refused
+		 to receive a file.
+
+      HELP
+
+
+         Objective: Display every command to the user with a definition.
+	 Every command and their definition must be separated by line
+         break. 
+	 Only the user who used the command must see the message.
+
+
+Nikeza & Boubaker & Saidi & Trinh & Laaouine                    [Page 10]
+
+                                    DNC                     February 2022
+
+
+         Arguments: None
+
+         Restrictions: None.
+
+         Possible Response:
+
+		 202 : (Every command must be separated by a line break)
+		 400
+
+
+         Examples:
+
+		 C: Help 
+		 S: 200 : QUIT : Logout of the server.
+		
+		ABS : Change the state of the user to Away.
+		
+		SEND nickname...: Send a request of private chat
+		to another user.
+
+
+4. Response Code
+
+
+      100 : means that the creation of the private chat is 
+      waiting to be accepted by the other user.
+
+
+      101 : means that the download is waiting to be accepted 
+      by the other user.
+
+
+      200 :  means that the command is successfully executed.
+
+
+Nikeza & Boubaker & Saidi & Trinh & Laaouine                    [Page 11]
+
+                                    DNC                    February 2022
+
+
+      201 : the private chat has been created.
+
+
+      202 : means that the HELP command is successfully executed.
+
+
+      204 : means that the LIST command is successfully executed.
+
+
+      205 : means that the TELL command is successfully executed.
+
+
+      206 : means that a user has logged in the server.
+
+
+      207 : means that a user has logged out of the server.
+
+
+      208 : means that a user has changed his nickname with EDIT.
+
+
+      209 : means that the STOP command is successfully executed.
+
+
+      210 : means that the user accepted to download a file from
+      another user.
+
+
+      400 : means that the execution failed.
+
+
+      403 : means that the user don't have the right to send a message.
+
+
+      404 : means that the command was not found.
+
+
+      408 : means that the user doesn’t exist on the server.
+
+
+      409 : means that the nickname that the user chose is already taken.
+
+     
+      410 : means that there is no private chat between those two users.
+
+
+      417: means that the user’s state is already away or online.
+
+      
+      418: means that the command is missing some parameters.
+
+      
+      419: means that the user can't use the command on himself.
+
+      
+      420: means that the command doesn't take parameters.
+
+
+Nikeza & Boubaker & Saidi & Trinh & Laaouine                   [Page 12]
+
+                                    DNC                    February 2022
+
+
+5. Author’s Addresses
+
+
+      Amelie Nikeza
+      email - nikamelie09@gmail.com
+
+
+      Mortadha Boubaker
+      email - mortadhaboubaker12@gmail.com
+
+
+      Amal Saidi
+      email - saidiamal300@gmail.com
+
+
+      Williams Trinh
+      email - trinh.williams084@gmail.com
+
+
+      Abdellah Laaouine
+      email - laaouine.abdo@gmail.com
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Nikeza & Boubaker & Saidi & Trinh & Laaouine                   [Page 13]

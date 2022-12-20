@@ -1,0 +1,19 @@
+DOC de l'interface
+
+1. Chaque client connecté est affiché à droite.
+
+2.Il faut faire click droit sur un client:
+	* Pour envoyer une demande de message privé.
+	* Pour accepter et refuser de recevoir un message privé.
+	* pour arreter un chat privé.
+	* pour envoyer une demande d'envoie de fichier.
+	* pour accepter ou refuser de recevoir un fichier.
+
+3. si le client est connecté il y'a un bouton qui marque que le client et connecté et pour le mettre
+en mode absent on appuie sur le même bouton.
+
+4. la fenêtre a une liste déroulante qui permet d'envoyer des messages :
+	* Everyone : pour envoyer le messages à tout le monde.
+        * le nom d'un client : pour envoyer un message privé à ce client.5.
+
+5. le bouton command list permet d'afficher la liste des commandes
